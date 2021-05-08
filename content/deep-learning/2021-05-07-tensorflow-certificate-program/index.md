@@ -7,7 +7,7 @@ categories:
   - Deep Learning
 tags:
   - tensorflow
-topic: Review
+topic: Reviews
 ---
 
 I just received the TensorFlow Developer Certificate.
