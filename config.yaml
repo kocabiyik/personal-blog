@@ -2,8 +2,8 @@ baseurl: /
 languageCode: en-us
 title: Imran Kocabiyik - Personal Website
 theme: hugo-lithium
-googleAnalytics: ''
-disqusShortname: ''
+# googleAnalytics: ''
+# disqusShortname: ''
 publishDir: "../kocabiyik.github.io"
 ignoreFiles:
   - \.Rmd$
