@@ -1,0 +1,209 @@
+---
+title: Linear Regression with Gradient Descent
+author: Imran Kocabiyik
+date: '2018-05-08'
+topic: 'Machine Learning'
+---
+
+
+
+<div id="linear-regression-with-gradient-descent" class="section level1">
+<h1>Linear Regression with Gradient Descent</h1>
+<p>Solving a linear regression problem with <em>Gradient Descent</em> optimization algorithm to better understand <em>learning</em>…</p>
+<div id="notations-and-definitions" class="section level2">
+<h2>1. Notations and Definitions</h2>
+<p>Assume the training set below: (a tibble in R)</p>
+<pre class="r"><code>library(dplyr)
+as_tibble(cars)</code></pre>
+<pre><code>## # A tibble: 50 x 2
+##    speed  dist
+##    &lt;dbl&gt; &lt;dbl&gt;
+##  1     4     2
+##  2     4    10
+##  3     7     4
+##  4     7    22
+##  5     8    16
+##  6     9    10
+##  7    10    18
+##  8    10    26
+##  9    10    34
+## 10    11    17
+## # … with 40 more rows</code></pre>
+<p><strong>m</strong> : Number of training examples (or data points). In this example it is 50.<br />
+<strong>x</strong> : Input variable <code>speed</code><br />
+<strong>y</strong> : Output variable <code>dist</code><br />
+<span class="math inline">\((x,y)\)</span> denotes one sample from our training set.<br />
+<span class="math inline">\((x^i, y^i)\)</span> is the <span class="math inline">\(i^{th}\)</span> training example. In our example, <span class="math inline">\(x^1\)</span> = 4, <span class="math inline">\(y^1\)</span> = 2</p>
+<p><strong>The hypothesis</strong> <span class="math inline">\(h\)</span> maps <span class="math inline">\(x\)</span>’s to <span class="math inline">\(y&#39;s\)</span>.<br />
+<span class="math inline">\(y\)</span> will be the estimated value of <code>dist</code>.</p>
+<div id="how-to-represent-h" class="section level3">
+<h3>1.1 How to represent <span class="math inline">\(h\)</span>?</h3>
+<p><span class="math display">\[h_\theta(x) = \theta_0+\theta_1 x\]</span></p>
+<p>Because there is one variable, it is also called as <strong>univariate linear regression</strong> or <strong>linear regression with one variable</strong>.</p>
+</div>
+</div>
+<div id="cost-function" class="section level2">
+<h2>2. Cost Function</h2>
+<p>How to choose <span class="math inline">\(\theta_0\)</span> and <span class="math inline">\(\theta_1\)</span> for the best fit?</p>
+<div id="idea" class="section level3">
+<h3>2.1 Idea</h3>
+<p>Chose <span class="math inline">\(\theta_0\)</span> and <span class="math inline">\(\theta_1\)</span> so that <span class="math inline">\(h_\theta(x)\)</span> is <strong>close to</strong> our training examples <span class="math inline">\(y\)</span>.</p>
+<p>Mathematically speaking, find <span class="math inline">\(\theta_0\)</span> and <span class="math inline">\(\theta_1\)</span> that <strong>minimizes</strong>:
+<span class="math display">\[J(\theta_0, \theta_1) = \frac{1}{2m}\sum\limits_1^m(h_\theta(x^i)-y^i)^2\]</span></p>
+<p><span class="math inline">\(J(\theta_0, \theta_1)\)</span> is the cost function. It is also called <strong>Squared Error Function</strong>.</p>
+</div>
+<div id="application" class="section level3">
+<h3>2.2 Application</h3>
+<p>An illustration with <code>cars</code> datasets in R:<br />
+Plot <code>speed</code> on x axis and <code>dist</code> (distance to stop) on y axis.</p>
+<pre class="r"><code>library(ggplot2)
+ggplot(cars, aes(x = speed, y = dist))+
+  geom_point()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/cars-scatterplot-1.png" width="672" /></p>
+<p>Add some models to represent the relationship between <code>speed</code> and <code>dist</code>.<br />
+For simplicity, set <span class="math inline">\(\theta_0 = 0\)</span>.</p>
+<pre class="r"><code>library(ggplot2)
+
+# simulate data
+set.seed(1010)
+sim1 &lt;- data_frame(
+  x = rep(cars$speed, 9),
+  y = rep(cars$dist, 9),
+  model_no = paste(&quot;Model&quot;, sort(rep(1:9, 50))),
+  theta1 = sort(rep(seq(from = 1, to = 4.5, length.out = 9), 50)),
+  theta0 = 0)</code></pre>
+<pre><code>## Warning: `data_frame()` is deprecated as of tibble 1.1.0.
+## Please use `tibble()` instead.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_warnings()` to see where this warning was generated.</code></pre>
+<pre class="r"><code># add predictions
+sim1 &lt;- sim1 %&gt;% mutate(prediction = theta0 + x*theta1)
+
+# visualize
+sim1 %&gt;% ggplot(aes(x = x, y = y))+
+  geom_point(size = 0.5)+
+  geom_abline(aes(slope = theta1, intercept = theta0), color = &quot;red&quot;) +
+  geom_segment(aes(x = x, xend = x,
+                   y = prediction, yend = y), alpha = 0.3) +
+  facet_grid(.~model_no)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/linear-models-1.png" width="864" /></p>
+<p>Now visualize cost function:</p>
+<pre class="r"><code># sum of squared errors
+sse &lt;- sim1 %&gt;% 
+  mutate(squared_error = (prediction-y)^2) %&gt;% 
+  group_by(model_no, theta1) %&gt;% 
+  summarize(m = n(),
+            cost = (1/(2*m))*sum(squared_error))</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;model_no&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>sse %&gt;% ggplot(aes(x = theta1, y = cost)) +
+  geom_point(color = &quot;blue&quot;) +
+  geom_text(aes(label = model_no), angle = 0, nudge_y = 20, size = 3)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/lienar-regression-cost-function-1.png" width="672" /></p>
+<p>It looks like a parabola. The model 5 is looks better comparing to other alternatives.</p>
+<p>How to find the best one? There might be other solutions but the objective of this example is understanding <em>learning</em>. So let’s go with <strong>Gradient Descent</strong>.</p>
+</div>
+</div>
+<div id="gradient-descent" class="section level2">
+<h2>3. Gradient Descent</h2>
+<p>Outline:<br />
+1. Start with some <span class="math inline">\(\theta_0, \theta_1\)</span><br />
+2. Keep changing <span class="math inline">\(\theta_0, \theta_1\)</span> to reduce <span class="math inline">\(J(\theta_0, \theta_1)\)</span> until we hopefully find a minimum.</p>
+<div id="gradient-descent-algorithm" class="section level3">
+<h3>3.1 Gradient Descent Algorithm</h3>
+<p>It is an itterative optimization algorithm. It is not only useful for linear regression but many machine learning problems.</p>
+<p>repeat until convergence:
+<span class="math display">\[\theta_j := \theta_j-\alpha\frac{\partial}{\partial_j}J(\theta_0,\theta_1)\]</span> for i = 0 and i = 1</p>
+<ul>
+<li><span class="math inline">\(:=\)</span> is the assigment operator<br />
+</li>
+<li><span class="math inline">\(\alpha\)</span> is the learning rate.<br />
+</li>
+<li><span class="math inline">\(\theta_0\)</span> and <span class="math inline">\(\theta_1\)</span> should <strong>simultaneously</strong> be updated.</li>
+</ul>
+</div>
+<div id="gradient-descent-visualization" class="section level3">
+<h3>3.2. Gradient Descent Visualization</h3>
+<p>Visualization with <code>ggplot2</code>:</p>
+<pre class="r"><code># cost function
+cost_function &lt;- function(x) (x-2)^2
+
+# derivative function
+library(Deriv)
+derivative &lt;- Deriv(cost_function)
+
+df &lt;- data_frame(x = 0,
+                 y = cost_function(x),
+                 new_x = x,
+                 new_y = y)
+
+# learning rate
+learning_rate = 0.2
+
+# create dataframe
+for (i in 1:20) {
+  x = df$new_x[i]
+  y = df$new_y[i]
+  step = derivative(x)*learning_rate
+  new_x = x-step
+  new_y = cost_function(new_x)
+  new_df = data_frame(x = x, y = y, new_x = new_x, new_y = new_y)
+  df &lt;- bind_rows(df, new_df)
+  rm(x, y, new_x, step, new_y, new_df)
+}
+
+# plot
+ggplot(df, aes(x, y)) +
+  geom_point() +
+  geom_segment(aes(x = x, xend = new_x,
+                   y =y, yend = new_y), color = &quot;blue&quot;, linetype = &quot;dotted&quot;) +
+  stat_function(fun = cost_function, alpha = 0.5) +
+  xlim(c(-1, 5)) +
+  ggtitle(label = &quot;Gradient Descent Visualization&quot;, subtitle = &quot;Learning rate : 0.2&quot;)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/gradient-descent-small-learning-rate-1.png" width="672" /></p>
+<p>In this example the learning rate was 0.2.</p>
+<p>Another example with a higher learning rate: 0.9 :</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/gradient-descent-high-learning-rate-1.png" width="672" /></p>
+</div>
+</div>
+<div id="finding-parameters-with-gradient-descent" class="section level2">
+<h2>3.3 Finding Parameters with Gradient Descent</h2>
+<p>Note that the derivative of the cost function:<br />
+<span class="math display">\[\frac{1}{m}\sum_{i}^{m}(h_\theta(x^{(i)}-y^{(i)})x^{(i)}\]</span></p>
+<p>Find the parameters:</p>
+<pre class="r"><code>x &lt;- cars$speed
+y &lt;- cars$dist
+theta1 &lt;- 6
+alpha &lt;- 0.001
+m &lt;- nrow(cars)
+yhat &lt;- theta1*x
+df &lt;- data_frame(theta1 = as.double(),
+                 cost = NA_real_,
+                 iteration = 1)
+for (i in 1:20){
+  theta1 &lt;- theta1 - alpha * ((1 / m) * (sum((yhat - y) * x)))
+  yhat &lt;- theta1*x
+  cost &lt;- (1/m)*sum((yhat-y)^2)
+  df[i, 1] = theta1
+  df[i, 2] &lt;- cost
+  df[i, 3] &lt;- i
+}
+theta1</code></pre>
+<pre><code>## [1] 2.915755</code></pre>
+<p>Visualize the linear regression line:</p>
+<pre class="r"><code>cars %&gt;% ggplot(aes(speed, dist))+
+                geom_point()+
+                geom_abline(slope = theta1, intercept = 0)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/linear-line-1.png" width="672" /></p>
+<p>Check the cost function:</p>
+<pre class="r"><code>df %&gt;% ggplot(aes(x = iteration, y = cost))+
+  geom_line()+
+  geom_point()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/cost-function-iteration-1.png" width="672" /></p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ul>
+<li><a href="https://www.coursera.org/learn/machine-learning">Coursera Machine Learning Course</a> by Andrew Ng</li>
+</ul>
+</div>
+</div>
