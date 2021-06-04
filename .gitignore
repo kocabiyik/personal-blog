@@ -1,4 +1,5 @@
 .Rhistory
 .Rprofile
 .Rproj.user/
-
+content/*.png
+content/*.jpg

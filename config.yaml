@@ -15,17 +15,22 @@ permalinks:
   tr: blog/:section/:slug/
   en: blog/:section/:slug/
 menu:
+  social:
+    - name: GitHub
+      url: https://github.com/kocabiyik/
+      icon: x
+    - name: Twitter
+      url: https://twitter.com/imrankocabiyik
+      icon: x
+    - name: LinkedIn
+      url: https://www.linkedin.com/in/imrankocabiyik/
+      icon: x
+    - name: StackOverflow
+      url: https://stackoverflow.com/users/5070121/imran-kocabiyik
+      icon: x
   main:
     - name: About
       url: /about/
-    - name: GitHub
-      url: https://github.com/kocabiyik/
-    - name: Twitter
-      url: https://twitter.com/imrankocabiyik
-    - name: LinkedIn
-      url: https://www.linkedin.com/in/imrankocabiyik/
-    - name: StackOverflow
-      url: https://stackoverflow.com/users/5070121/imran-kocabiyik
 params:
   MathJaxCDN: //cdnjs.cloudflare.com/ajax/libs
   MathJaxVersion: 2.7.5

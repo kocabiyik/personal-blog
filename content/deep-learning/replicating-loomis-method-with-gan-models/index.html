@@ -1,0 +1,88 @@
+---
+title: Mimicking an Art Technique with GANs
+author: Imran Kocabiyik
+date: '2021-05-08'
+slug: replicating-loomis-method-with-gan-models
+categories:
+  - Deep Learning
+tags: []
+topic: 'Deep Learning'
+---
+
+
+
+<p>I recently learned one art technique for drawing heads. This technique is called Loomis Method. It is taught by Andrew Loomis in his book, Drawing the Head &amp; Hands.</p>
+<p>Anyway, a picture is worth a thousand words. Here is one of my drawings with the Loomis method (Elif):</p>
+<p><img src="images/loomis-head-sample.jpg" /></p>
+<div id="objective" class="section level2">
+<h2>0. Objective</h2>
+<p>Apart from learning this art technique, I wanted to develop a machine learning model to transform a photo into a Loomis head drawing (and the other way around).</p>
+<p>For this transformation, I tried two GAN models: pix2pix and cyclegan.</p>
+</div>
+<div id="pix2pix" class="section level2">
+<h2>1. pix2pix</h2>
+<p>pix2pix is mapping an image in one domain to another. For example, it can colorize a black and white image. In my case, it will take a portrait photo and return a drawing with the Loomis method.</p>
+<p>How does it work? I can simply explain as follows:</p>
+<p>The architecture has two main components: the generator and the discriminator.</p>
+<p>The generator generates an image. It is just random pixels in its first try.</p>
+<p>The discriminator, on the other hand, is just predicting whether an image pair is produced by the generator or not. In other words, it is doing a binary classification.</p>
+<p>Over time, the generator produces better images, and the discriminator is getting better in distinguishing what is real and what is produced. The whole architecture is designed in a way that the generated images are indistinguishable by the discriminator. This is only possible when the generator produces good images.</p>
+<p>To learn more about pix2pix, I would recommend you to watch this video by Two Minutes paper.</p>
+<div id="my-dataset" class="section level3">
+<h3>1.1 My Dataset</h3>
+<p>pix2pix requires a paired dataset. I created the following pairs. I have nearly 100 pairs. It is still a limited dataset, but I wanted to give it a try.</p>
+<p><img src="images/loomis-head-dataset.jpg" /></p>
+</div>
+<div id="training" class="section level3">
+<h3>1.2 Training</h3>
+<p>I trained the model a few hours on the AWS EC2 instance with a good GPU.</p>
+<p>1.3 Results
+The results were not great, but OK for now. I didn’t (couldn’t) expect more than these.</p>
+<p>As you can see in the below illustration, in most of the outputs, the angle of the head doesn’t look correct. I assume it is because my training dataset doesn’t have enough examples to cover all the possible combinations.</p>
+<p>A few outputs:</p>
+<p><img src="images/testing-loomis-head.jpg" /></p>
+<p>It is a pain to get such pairs. Luckily, there is another framework for doing image to image translation, and it doesn’t require paired examples. It is CycleGAN.</p>
+</div>
+</div>
+<div id="cyclegan" class="section level2">
+<h2>2. CycleGAN</h2>
+<p>This time I need a bunch of input images (portraits), and a bunch of target images (drawings). No need to have pairs.</p>
+<p>There is a constraint in this architecture: Generated images are translated back to the original image so that there will be a meaningful relationship between the input images and the generated images. A good explanation is here.</p>
+<div id="dataset" class="section level3">
+<h3>2.1 Dataset</h3>
+<p>I picked 600 samples out of 100K StyleGAN generated photos. In other words, they are photos of people who don’t exist. This dataset doesn’t have sample portrait photos with extreme angles. For simplicity, I picked the ones with natural lighting, soft background, not smiling.</p>
+</div>
+<div id="results" class="section level3">
+<h3>2.3 Results</h3>
+<p>It couldn’t translate photo to drawing well. The output is like edge detection. However, drawing to photo translation was much better than I expected. In the paper, and found this statement:</p>
+<blockquote>
+<p>On translation tasks that involve color and texture changes, like many of those reported above, the method often succeeds. We have also explored tasks that require geometric changes, with little success.
+One sample for drawing to photo translation:</p>
+</blockquote>
+<p><img src="images/loomis-head-cyclegan-sample-output.png" /></p>
+<p>See the below video to see how it is translating.</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/oaQXltWm-6U" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+</iframe>
+<p>Finally, I also wanted to see how it performs with a training set with less variance. So, I trained it with photos with studio lighting, white background.</p>
+<p>Two outputs:</p>
+<p><img src="images/loomis-head-cyclegan-sample-output2.png" />
+<img src="images/loomis-head-cyclegan-sample-output3.png" /></p>
+</div>
+</div>
+<div id="final-thoughts" class="section level2">
+<h2>3. Final Thoughts</h2>
+<p>This task, extracting artistic form from a photo, is requiring a geometric transformation.</p>
+<p>pix2pix seems to work; however, it requires paired examples, and it is difficult to find in most cases. I thought it could work better if I had 3D models in both domains so that I could render images in a way that they will be pairs. However, I didn’t spend time on that.</p>
+<p>CycleGAN works well when there are no pairs. However, it can’t do a geometric transformation. It is good if the task is about changing texture or color.</p>
+<p>I found both pix2pix and CycleGAN amazing. They would bring much better results if I have had more training examples and if I have trained them longer.</p>
+<p>Let me know if you detect a mistake. I will be developing this content.</p>
+<ol start="4" style="list-style-type: decimal">
+<li>References</li>
+</ol>
+<ul>
+<li>Loomis, Andrew. (1956). Drawing the Head and Hands. Retrieved from <a href="http://books.google.com" class="uri">http://books.google.com</a></li>
+<li>Phillip Isola, Jun-Yan Zhu, Tinghui Zhou, Alexei A. Efros. (2018). Image-to-Image Translation with Conditional Adversarial Networks</li>
+<li>Jun-Yan Zhu, Taesung Park, Phillip Isola, Alexei A. Efros. (2018). Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks</li>
+<li>stylegan GitHub Repo</li>
+</ul>
+</div>
